@@ -1,0 +1,49 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  seguridad-y-construccion:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Traer el código
+    - name: Checkout del código
+      uses: actions/checkout@v3
+
+    # 2. Instalar Node
+    - name: Configurar Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Instalar dependencias
+      run: npm install
+
+    # 3. Control SCA (Dependencias) 
+    - name: SCA - Análisis de Dependencias (npm audit)
+      run: npm audit --audit-level=high
+
+    # 4. Control SAST (Código) 
+    - name: SAST - Análisis Estático con Semgrep
+      run: |
+        docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config auto --error /src
+
+    # 5. Build del Contenedor
+    - name: Construir Imagen Docker
+      run: docker build -t api-limones:latest .
+
+    # 6. Control de Seguridad de Contenedores 
+    - name: Escaneo de Contenedor con Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'api-limones:latest'
+        format: 'table'
+        exit-code: '1' # Esto hace que el pipeline falle si hay error
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'

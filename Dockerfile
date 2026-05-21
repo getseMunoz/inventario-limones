@@ -1,5 +1,5 @@
-#FROM node:22-alpine
-FROM node:14-slim
+FROM node:22-alpine
+#FROM node:14-slim
 WORKDIR /app
 COPY package*.json ./
 RUN npm install -g npm@latest

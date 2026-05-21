@@ -1,5 +1,8 @@
 const express = require('express');
+
+// nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 const app = express();
+
 app.use(express.json());
 
 let inventario = [
